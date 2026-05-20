@@ -290,6 +290,8 @@
               maxlength="4"
               label="4-digit PIN (optional)"
               :hint="cardDialog.data.id ? 'Leave empty to keep existing PIN' : 'Leave empty for no PIN'"
+              :rules="[v => !v || (v.length === 4 && /^\d{4}$/.test(v)) || 'PIN must be exactly 4 digits']"
+              lazy-rules
             ></q-input>
           </div>
         </div>

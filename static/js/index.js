@@ -297,7 +297,12 @@ window.app = Vue.createApp({
         id: this.cardDialog.data.wallet
       })
       let data = _.clone(this.cardDialog.data)
-      if (!data.pin) data.pin = null
+      if (!data.pin) {
+        data.pin = null
+      } else if (!/^\d{4}$/.test(data.pin)) {
+        Quasar.Notify.create({type: 'negative', message: 'PIN must be exactly 4 digits.'})
+        return
+      }
       if (!data.pin_limit) data.pin_limit = null
       if (data.id) {
         this.updateCard(wallet, data)
