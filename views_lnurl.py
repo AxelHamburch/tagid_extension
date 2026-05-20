@@ -108,7 +108,7 @@ async def api_scan(
         "payLink": pay_link,
     }
     if card.pin_limit is not None:
-        response["pinLimit"] = card.pin_limit
+        response["pinLimit"] = card.pin_limit * 1000
     return response
 
 
@@ -146,7 +146,7 @@ async def lnurl_callback(
     if not card:
         return LnurlErrorResponse(reason="Card not found.")
 
-    if card.pin_limit is not None and invoice.amount_msat >= card.pin_limit:
+    if card.pin_limit is not None and invoice.amount_msat >= card.pin_limit * 1000:
         if not pin:
             return LnurlErrorResponse(reason="PIN required.")
         if not card.pin or not verify_pin(pin, card.id, card.pin):
