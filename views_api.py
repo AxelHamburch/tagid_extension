@@ -14,6 +14,7 @@ from .crud import (
     get_cards,
     get_hits,
     get_refunds,
+    hash_pin,
     update_card,
 )
 from .models import Card, CreateCardData, Hit, Refund
@@ -86,6 +87,10 @@ async def api_card_update(
         )
     for key, value in data.dict().items():
         setattr(card, key, value)
+    if data.pin:
+        card.pin = hash_pin(data.pin, card.id)
+    elif data.pin is None:
+        card.pin = None
     await update_card(card)
     return card
 

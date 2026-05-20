@@ -29,9 +29,12 @@ from .crud import (
     get_card_by_uid,
     get_hit,
     get_hits_today,
+    invalidate_hit,
     spend_hit,
     update_card_counter,
     update_card_otp,
+    update_hit_pin_attempts,
+    verify_pin,
 )
 from .models import UIDPost
 from .nxp424 import decrypt_sun, get_sun_mac
@@ -43,7 +46,7 @@ boltcards_lnurl_router = APIRouter()
 @boltcards_lnurl_router.get("/api/v1/scan/{external_id}")
 async def api_scan(
     p, c, request: Request, external_id: str
-) -> LnurlWithdrawResponse | LnurlErrorResponse:
+) -> dict | LnurlErrorResponse:
     # some wallets send everything as lower case, no bueno
     p = p.upper()
     c = c.upper()
@@ -94,17 +97,19 @@ async def api_scan(
     pay_link = lnurlpay_url.replace("http://", "lnurlp://").replace(
         "https://", "lnurlp://"
     )
-    callback_url = parse_obj_as(
-        CallbackUrl, str(request.url_for("boltcards.lnurl_callback", hit_id=hit.id))
-    )
-    return LnurlWithdrawResponse(
-        callback=callback_url,
-        k1=hit.id,
-        minWithdrawable=MilliSatoshi(1000),
-        maxWithdrawable=MilliSatoshi(int(card.tx_limit) * 1000),
-        defaultDescription=f"Boltcard (refund address {pay_link})",
-        payLink=pay_link,  # type: ignore
-    )
+    callback_url = str(request.url_for("boltcards.lnurl_callback", hit_id=hit.id))
+    response: dict = {
+        "tag": "withdrawRequest",
+        "callback": callback_url,
+        "k1": hit.id,
+        "minWithdrawable": 1000,
+        "maxWithdrawable": int(card.tx_limit) * 1000,
+        "defaultDescription": f"Boltcard (refund address {pay_link})",
+        "payLink": pay_link,
+    }
+    if card.pin_limit is not None:
+        response["pinLimit"] = card.pin_limit
+    return response
 
 
 @boltcards_lnurl_router.get(
@@ -116,6 +121,7 @@ async def lnurl_callback(
     hit_id: str,
     k1: str = Query(None),
     pr: str = Query(None),
+    pin: str = Query(None),
 ) -> LnurlErrorResponse | LnurlSuccessResponse:
     if not k1:
         return LnurlErrorResponse(reason="Missing K1 token")
@@ -139,6 +145,20 @@ async def lnurl_callback(
     card = await get_card(hit.card_id)
     if not card:
         return LnurlErrorResponse(reason="Card not found.")
+
+    if card.pin_limit is not None and invoice.amount_msat >= card.pin_limit:
+        if not pin:
+            return LnurlErrorResponse(reason="PIN required.")
+        if not card.pin or not verify_pin(pin, card.id, card.pin):
+            new_attempts = hit.pin_attempts + 1
+            if new_attempts >= 3:
+                await invalidate_hit(hit.id)
+                return LnurlErrorResponse(
+                    reason="Card blocked: too many incorrect PIN attempts"
+                )
+            await update_hit_pin_attempts(hit.id, new_attempts)
+            return LnurlErrorResponse(reason="Invalid PIN")
+
     hit = await spend_hit(card_id=hit.id, amount=int(invoice.amount_msat / 1000))
     if not hit:
         return LnurlErrorResponse(reason="Failed to update hit as spent.")
