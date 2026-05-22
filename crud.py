@@ -236,6 +236,20 @@ async def update_hit_pin_attempts(hit_id: str, attempts: int) -> None:
     )
 
 
+async def block_card(card_id: str) -> None:
+    await db.execute(
+        "UPDATE boltcards.cards SET pin_blocked = :blocked WHERE id = :id",
+        {"blocked": True, "id": card_id},
+    )
+
+
+async def unblock_card(card_id: str) -> None:
+    await db.execute(
+        "UPDATE boltcards.cards SET pin_blocked = :blocked WHERE id = :id",
+        {"blocked": False, "id": card_id},
+    )
+
+
 async def invalidate_hit(hit_id: str) -> None:
     await db.execute(
         "UPDATE boltcards.hits SET spent = :spent WHERE id = :id",

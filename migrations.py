@@ -69,6 +69,12 @@ async def m003_add_pin_limit(db):
     )
 
 
+async def m004_add_pin_blocked(db):
+    await db.execute(
+        "ALTER TABLE boltcards.cards ADD COLUMN pin_blocked BOOL NOT NULL DEFAULT False"
+    )
+
+
 async def m002_correct_typing(db):
     await db.execute("ALTER TABLE boltcards.cards RENAME TO cards_m001;")
     await db.execute(
