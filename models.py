@@ -31,6 +31,7 @@ class Card(BaseModel):
     time: datetime
     pin_limit: Optional[int] = None
     pin: Optional[str] = None
+    pin_total_attempts: int = 0
 
     def lnurl(self, req: Request) -> Lnurl:
         url = str(

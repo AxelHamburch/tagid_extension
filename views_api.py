@@ -89,8 +89,10 @@ async def api_card_update(
         setattr(card, key, value)
     if data.pin:
         card.pin = hash_pin(data.pin, card.id)
+        card.pin_total_attempts = 0
     elif data.pin is None:
         card.pin = None
+        card.pin_total_attempts = 0
     await update_card(card)
     return card
 

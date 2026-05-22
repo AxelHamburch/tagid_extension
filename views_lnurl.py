@@ -30,7 +30,9 @@ from .crud import (
     get_card_by_uid,
     get_hit,
     get_hits_today,
+    increment_card_pin_attempts,
     invalidate_hit,
+    reset_card_pin_attempts,
     spend_hit,
     update_card_counter,
     update_card_otp,
@@ -151,16 +153,17 @@ async def lnurl_callback(
         if not pin:
             return LnurlErrorResponse(reason="PIN required.")
         if not card.pin or not verify_pin(pin, card.id, card.pin):
-            new_attempts = hit.pin_attempts + 1
-            if new_attempts >= 3:
+            total = await increment_card_pin_attempts(card.id)
+            await update_hit_pin_attempts(hit.id, hit.pin_attempts + 1)
+            if total >= 3:
                 await invalidate_hit(hit.id)
                 await enable_disable_card(enable=False, card_id=card.id)
                 return LnurlErrorResponse(
                     reason="Card blocked: too many incorrect PIN attempts"
                 )
-            await update_hit_pin_attempts(hit.id, new_attempts)
             return LnurlErrorResponse(reason="Invalid PIN")
 
+    await reset_card_pin_attempts(card.id)
     hit = await spend_hit(card_id=hit.id, amount=int(invoice.amount_msat / 1000))
     if not hit:
         return LnurlErrorResponse(reason="Failed to update hit as spent.")

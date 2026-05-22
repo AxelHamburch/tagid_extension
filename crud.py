@@ -236,6 +236,25 @@ async def update_hit_pin_attempts(hit_id: str, attempts: int) -> None:
     )
 
 
+async def increment_card_pin_attempts(card_id: str) -> int:
+    await db.execute(
+        "UPDATE boltcards.cards SET pin_total_attempts = pin_total_attempts + 1 WHERE id = :id",
+        {"id": card_id},
+    )
+    row = await db.fetchone(
+        "SELECT pin_total_attempts FROM boltcards.cards WHERE id = :id",
+        {"id": card_id},
+    )
+    return row["pin_total_attempts"] if row else 0
+
+
+async def reset_card_pin_attempts(card_id: str) -> None:
+    await db.execute(
+        "UPDATE boltcards.cards SET pin_total_attempts = 0 WHERE id = :id",
+        {"id": card_id},
+    )
+
+
 async def invalidate_hit(hit_id: str) -> None:
     await db.execute(
         "UPDATE boltcards.hits SET spent = :spent WHERE id = :id",
