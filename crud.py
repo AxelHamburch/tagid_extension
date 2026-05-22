@@ -142,10 +142,18 @@ async def update_card_counter(counter: int, card_id: str):
 
 
 async def enable_disable_card(enable: bool, card_id: str) -> Card | None:
-    await db.execute(
-        "UPDATE boltcards.cards SET enable = :enable WHERE id = :id",
-        {"enable": enable, "id": card_id},
-    )
+    if enable:
+        # Reset attempt counter when card is re-enabled so first wrong PIN
+        # doesn't immediately re-block a card that was just unlocked by admin.
+        await db.execute(
+            "UPDATE boltcards.cards SET enable = :enable, pin_total_attempts = 0 WHERE id = :id",
+            {"enable": enable, "id": card_id},
+        )
+    else:
+        await db.execute(
+            "UPDATE boltcards.cards SET enable = :enable WHERE id = :id",
+            {"enable": enable, "id": card_id},
+        )
     return await get_card(card_id)
 
 
