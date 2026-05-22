@@ -15,7 +15,6 @@ from .crud import (
     get_hits,
     get_refunds,
     hash_pin,
-    unblock_card,
     update_card,
 )
 from .models import Card, CreateCardData, Hit, Refund
@@ -90,10 +89,8 @@ async def api_card_update(
         setattr(card, key, value)
     if data.pin:
         card.pin = hash_pin(data.pin, card.id)
-        card.pin_blocked = False
     elif data.pin is None:
         card.pin = None
-        card.pin_blocked = False
     await update_card(card)
     return card
 

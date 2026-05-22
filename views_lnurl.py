@@ -22,8 +22,8 @@ from lnurl import (
 from pydantic import parse_obj_as
 
 from .crud import (
-    block_card,
     create_hit,
+    enable_disable_card,
     get_card,
     get_card_by_external_id,
     get_card_by_otp,
@@ -58,8 +58,6 @@ async def api_scan(
         return LnurlErrorResponse(reason="Card not found.")
     if not card.enable:
         return LnurlErrorResponse(reason="Card is disabled.")
-    if card.pin_blocked:
-        return LnurlErrorResponse(reason="Card blocked: too many incorrect PIN attempts")
     try:
         card_uid, counter = decrypt_sun(bytes.fromhex(p), bytes.fromhex(card.k1))
         if card.uid.upper() != card_uid.hex().upper():
@@ -156,7 +154,7 @@ async def lnurl_callback(
             new_attempts = hit.pin_attempts + 1
             if new_attempts >= 3:
                 await invalidate_hit(hit.id)
-                await block_card(card.id)
+                await enable_disable_card(enable=False, card_id=card.id)
                 return LnurlErrorResponse(
                     reason="Card blocked: too many incorrect PIN attempts"
                 )
