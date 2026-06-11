@@ -149,6 +149,19 @@ async def lnurl_callback(
     if not card:
         return LnurlErrorResponse(reason="Card not found.")
 
+    amount_sat = int(invoice.amount_msat / 1000)
+    # Validate limits before the hit is marked as spent, so a rejected
+    # attempt does not count towards the daily limit.
+    if amount_sat > int(card.tx_limit):
+        return LnurlErrorResponse(
+            reason=f"Payment failed - Invoice amount {amount_sat} sats is "
+            f"too high. Max allowed: {int(card.tx_limit)} sats."
+        )
+    todays_hits = await get_hits_today(card.id)
+    spent_today = sum(h.amount for h in todays_hits)
+    if spent_today + amount_sat > int(card.daily_limit):
+        return LnurlErrorResponse(reason="Max daily limit spent.")
+
     if card.pin_limit is not None and invoice.amount_msat >= card.pin_limit * 1000:
         if not pin:
             return LnurlErrorResponse(reason="PIN required.")
@@ -164,7 +177,7 @@ async def lnurl_callback(
             return LnurlErrorResponse(reason="Invalid PIN")
 
     await reset_card_pin_attempts(card.id)
-    hit = await spend_hit(card_id=hit.id, amount=int(invoice.amount_msat / 1000))
+    hit = await spend_hit(card_id=hit.id, amount=amount_sat)
     if not hit:
         return LnurlErrorResponse(reason="Failed to update hit as spent.")
     try:
@@ -176,6 +189,10 @@ async def lnurl_callback(
         )
         return LnurlSuccessResponse()
     except Exception as exc:
+        # No payment happened — zero the hit amount so the failed attempt
+        # does not count towards the daily limit. The hit stays spent so
+        # the same k1 cannot be claimed again.
+        await spend_hit(card_id=hit.id, amount=0)
         return LnurlErrorResponse(reason=f"Payment failed - {exc}")
 
 
