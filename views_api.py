@@ -1,4 +1,4 @@
-from http import HTTPStatus
+﻿from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from lnbits.core.crud import get_user
@@ -19,10 +19,10 @@ from .crud import (
 )
 from .models import Card, CreateCardData, Hit, Refund
 
-boltcards_api_router = APIRouter()
+tagid_api_router = APIRouter()
 
 
-@boltcards_api_router.get("/api/v1/cards")
+@tagid_api_router.get("/api/v1/cards")
 async def api_cards(
     key_info: WalletTypeInfo = Depends(require_invoice_key), all_wallets: bool = False
 ) -> list[Card]:
@@ -62,7 +62,7 @@ def validate_card(data: CreateCardData):
         ) from exc
 
 
-@boltcards_api_router.put(
+@tagid_api_router.put(
     "/api/v1/cards/{card_id}",
     status_code=HTTPStatus.OK,
     dependencies=[Depends(validate_card)],
@@ -97,7 +97,7 @@ async def api_card_update(
     return card
 
 
-@boltcards_api_router.post(
+@tagid_api_router.post(
     "/api/v1/cards",
     status_code=HTTPStatus.CREATED,
     dependencies=[Depends(validate_card)],
@@ -121,7 +121,7 @@ async def api_card_create(
     return card
 
 
-@boltcards_api_router.get(
+@tagid_api_router.get(
     "/api/v1/cards/enable/{card_id}/{enable}", status_code=HTTPStatus.OK
 )
 async def enable_card(
@@ -143,7 +143,7 @@ async def enable_card(
     return card
 
 
-@boltcards_api_router.delete("/api/v1/cards/{card_id}")
+@tagid_api_router.delete("/api/v1/cards/{card_id}")
 async def api_card_delete(
     card_id, wallet: WalletTypeInfo = Depends(require_admin_key)
 ) -> None:
@@ -160,7 +160,7 @@ async def api_card_delete(
     await delete_card(card_id)
 
 
-@boltcards_api_router.get("/api/v1/hits")
+@tagid_api_router.get("/api/v1/hits")
 async def api_hits(
     key_info: WalletTypeInfo = Depends(require_invoice_key),
     all_wallets: bool = Query(False),
@@ -179,7 +179,7 @@ async def api_hits(
     return await get_hits(cards_ids)
 
 
-@boltcards_api_router.get("/api/v1/refunds")
+@tagid_api_router.get("/api/v1/refunds")
 async def api_refunds(
     key_info: WalletTypeInfo = Depends(require_invoice_key),
     all_wallets: bool = Query(False),

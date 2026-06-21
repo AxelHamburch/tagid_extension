@@ -1,4 +1,4 @@
-import secrets
+﻿import secrets
 from datetime import datetime
 from hashlib import pbkdf2_hmac
 
@@ -15,7 +15,7 @@ def hash_pin(pin: str, card_id: str) -> str:
 def verify_pin(pin: str, card_id: str, stored_hash: str) -> bool:
     return hash_pin(pin, card_id) == stored_hash
 
-db = Database("ext_boltcards")
+db = Database("ext_tagid")
 
 
 async def create_card(data: CreateCardData, wallet_id: str) -> Card:
@@ -26,7 +26,7 @@ async def create_card(data: CreateCardData, wallet_id: str) -> Card:
 
     await db.execute(
         """
-        INSERT INTO boltcards.cards (
+        INSERT INTO tagid.cards (
             id,
             uid,
             external_id,
@@ -73,7 +73,7 @@ async def create_card(data: CreateCardData, wallet_id: str) -> Card:
 
 
 async def update_card(card: Card) -> Card:
-    await db.update("boltcards.cards", card)
+    await db.update("tagid.cards", card)
     return card
 
 
@@ -82,14 +82,14 @@ async def get_cards(wallet_ids: list[str]) -> list[Card]:
         return []
     q = ",".join([f"'{wallet_id}'" for wallet_id in wallet_ids])
     return await db.fetchall(
-        f"SELECT * FROM boltcards.cards WHERE wallet IN ({q})",
+        f"SELECT * FROM tagid.cards WHERE wallet IN ({q})",
         model=Card,
     )
 
 
 async def get_card(card_id: str) -> Card | None:
     return await db.fetchone(
-        "SELECT * FROM boltcards.cards WHERE id = :id",
+        "SELECT * FROM tagid.cards WHERE id = :id",
         {"id": card_id},
         Card,
     )
@@ -97,7 +97,7 @@ async def get_card(card_id: str) -> Card | None:
 
 async def get_card_by_uid(card_uid: str) -> Card | None:
     return await db.fetchone(
-        "SELECT * FROM boltcards.cards WHERE uid = :uid",
+        "SELECT * FROM tagid.cards WHERE uid = :uid",
         {"uid": card_uid.upper()},
         Card,
     )
@@ -105,7 +105,7 @@ async def get_card_by_uid(card_uid: str) -> Card | None:
 
 async def get_card_by_external_id(external_id: str) -> Card | None:
     return await db.fetchone(
-        "SELECT * FROM boltcards.cards WHERE external_id = :ext_id",
+        "SELECT * FROM tagid.cards WHERE external_id = :ext_id",
         {"ext_id": external_id.lower()},
         Card,
     )
@@ -113,7 +113,7 @@ async def get_card_by_external_id(external_id: str) -> Card | None:
 
 async def get_card_by_otp(otp: str) -> Card | None:
     return await db.fetchone(
-        "SELECT * FROM boltcards.cards WHERE otp = :otp",
+        "SELECT * FROM tagid.cards WHERE otp = :otp",
         {"otp": otp},
         Card,
     )
@@ -121,22 +121,22 @@ async def get_card_by_otp(otp: str) -> Card | None:
 
 async def delete_card(card_id: str) -> None:
     # Delete cards
-    await db.execute("DELETE FROM boltcards.cards WHERE id = :id", {"id": card_id})
+    await db.execute("DELETE FROM tagid.cards WHERE id = :id", {"id": card_id})
     # Delete hits
     hits = await get_hits([card_id])
     for hit in hits:
-        await db.execute("DELETE FROM boltcards.hits WHERE id = :id", {"id": hit.id})
+        await db.execute("DELETE FROM tagid.hits WHERE id = :id", {"id": hit.id})
         # Delete refunds
         refunds = await get_refunds([hit.id])
         for refund in refunds:
             await db.execute(
-                "DELETE FROM boltcards.refunds WHERE id = :id", {"id": refund.id}
+                "DELETE FROM tagid.refunds WHERE id = :id", {"id": refund.id}
             )
 
 
 async def update_card_counter(counter: int, card_id: str):
     await db.execute(
-        "UPDATE boltcards.cards SET counter = :counter WHERE id = :id",
+        "UPDATE tagid.cards SET counter = :counter WHERE id = :id",
         {"counter": counter, "id": card_id},
     )
 
@@ -146,12 +146,12 @@ async def enable_disable_card(enable: bool, card_id: str) -> Card | None:
         # Reset attempt counter when card is re-enabled so first wrong PIN
         # doesn't immediately re-block a card that was just unlocked by admin.
         await db.execute(
-            "UPDATE boltcards.cards SET enable = :enable, pin_total_attempts = 0 WHERE id = :id",
+            "UPDATE tagid.cards SET enable = :enable, pin_total_attempts = 0 WHERE id = :id",
             {"enable": enable, "id": card_id},
         )
     else:
         await db.execute(
-            "UPDATE boltcards.cards SET enable = :enable WHERE id = :id",
+            "UPDATE tagid.cards SET enable = :enable WHERE id = :id",
             {"enable": enable, "id": card_id},
         )
     return await get_card(card_id)
@@ -159,14 +159,14 @@ async def enable_disable_card(enable: bool, card_id: str) -> Card | None:
 
 async def update_card_otp(otp: str, card_id: str):
     await db.execute(
-        "UPDATE boltcards.cards SET otp = :otp WHERE id = :id",
+        "UPDATE tagid.cards SET otp = :otp WHERE id = :id",
         {"otp": otp, "id": card_id},
     )
 
 
 async def get_hit(hit_id: str) -> Hit | None:
     return await db.fetchone(
-        "SELECT * FROM boltcards.hits WHERE id = :id",
+        "SELECT * FROM tagid.hits WHERE id = :id",
         {"id": hit_id},
         Hit,
     )
@@ -178,14 +178,14 @@ async def get_hits(cards_ids: list[str]) -> list[Hit]:
 
     q = ",".join([f"'{card_id}'" for card_id in cards_ids])
     return await db.fetchall(
-        f"SELECT * FROM boltcards.hits WHERE card_id IN ({q})",
+        f"SELECT * FROM tagid.hits WHERE card_id IN ({q})",
         model=Hit,
     )
 
 
 async def get_hits_today(card_id: str) -> list[Hit]:
     rows = await db.fetchall(
-        "SELECT * FROM boltcards.hits WHERE card_id = :id",
+        "SELECT * FROM tagid.hits WHERE card_id = :id",
         {"id": card_id},
         Hit,
     )
@@ -199,7 +199,7 @@ async def get_hits_today(card_id: str) -> list[Hit]:
 
 async def spend_hit(card_id: str, amount: int):
     await db.execute(
-        "UPDATE boltcards.hits SET spent = :spent, amount = :amount WHERE id = :id",
+        "UPDATE tagid.hits SET spent = :spent, amount = :amount WHERE id = :id",
         {"spent": True, "amount": amount, "id": card_id},
     )
     return await get_hit(card_id)
@@ -209,7 +209,7 @@ async def create_hit(card_id, ip, useragent, old_ctr, new_ctr) -> Hit:
     hit_id = urlsafe_short_hash()
     await db.execute(
         """
-        INSERT INTO boltcards.hits (
+        INSERT INTO tagid.hits (
             id,
             card_id,
             ip,
@@ -239,18 +239,18 @@ async def create_hit(card_id, ip, useragent, old_ctr, new_ctr) -> Hit:
 
 async def update_hit_pin_attempts(hit_id: str, attempts: int) -> None:
     await db.execute(
-        "UPDATE boltcards.hits SET pin_attempts = :attempts WHERE id = :id",
+        "UPDATE tagid.hits SET pin_attempts = :attempts WHERE id = :id",
         {"attempts": attempts, "id": hit_id},
     )
 
 
 async def increment_card_pin_attempts(card_id: str) -> int:
     await db.execute(
-        "UPDATE boltcards.cards SET pin_total_attempts = pin_total_attempts + 1 WHERE id = :id",
+        "UPDATE tagid.cards SET pin_total_attempts = pin_total_attempts + 1 WHERE id = :id",
         {"id": card_id},
     )
     row = await db.fetchone(
-        "SELECT pin_total_attempts FROM boltcards.cards WHERE id = :id",
+        "SELECT pin_total_attempts FROM tagid.cards WHERE id = :id",
         {"id": card_id},
     )
     return row["pin_total_attempts"] if row else 0
@@ -258,14 +258,14 @@ async def increment_card_pin_attempts(card_id: str) -> int:
 
 async def reset_card_pin_attempts(card_id: str) -> None:
     await db.execute(
-        "UPDATE boltcards.cards SET pin_total_attempts = 0 WHERE id = :id",
+        "UPDATE tagid.cards SET pin_total_attempts = 0 WHERE id = :id",
         {"id": card_id},
     )
 
 
 async def invalidate_hit(hit_id: str) -> None:
     await db.execute(
-        "UPDATE boltcards.hits SET spent = :spent WHERE id = :id",
+        "UPDATE tagid.hits SET spent = :spent WHERE id = :id",
         {"spent": True, "id": hit_id},
     )
 
@@ -274,7 +274,7 @@ async def create_refund(hit_id, refund_amount) -> Refund:
     refund_id = urlsafe_short_hash()
     await db.execute(
         """
-        INSERT INTO boltcards.refunds (
+        INSERT INTO tagid.refunds (
             id,
             hit_id,
             refund_amount
@@ -294,7 +294,7 @@ async def create_refund(hit_id, refund_amount) -> Refund:
 
 async def get_refund(refund_id: str) -> Refund | None:
     return await db.fetchone(
-        "SELECT * FROM boltcards.refunds WHERE id = :id",
+        "SELECT * FROM tagid.refunds WHERE id = :id",
         {"id": refund_id},
         Refund,
     )
@@ -305,6 +305,6 @@ async def get_refunds(hits_ids: list[str]) -> list[Refund]:
         return []
     q = ",".join([f"'{hit_id}'" for hit_id in hits_ids])
     return await db.fetchall(
-        f"SELECT * FROM boltcards.refunds WHERE hit_id IN ({q})",
+        f"SELECT * FROM tagid.refunds WHERE hit_id IN ({q})",
         model=Refund,
     )

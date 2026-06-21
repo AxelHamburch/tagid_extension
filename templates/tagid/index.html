@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% from "macros.jinja" import window_vars with context
+﻿{% extends "base.html" %} {% from "macros.jinja" import window_vars with context
 %} {% block page %}
 
 <div class="row q-col-gutter-md">
@@ -74,7 +74,7 @@
                   icon="query_stats"
                   :color="($q.dark.isActive) ? 'grey-7' : 'grey-5'"
                   type="a"
-                  :href="'/boltcards/' + props.row.external_id"
+                  :href="'/tagid/' + props.row.external_id"
                   target="_blank"
                 >
                   <q-tooltip>Card Stats</q-tooltip>
@@ -229,7 +229,7 @@
       </q-card-section>
       <q-card-section class="q-pa-none">
         <q-separator></q-separator>
-        <q-list> {% include "boltcards/_api_docs.html" %} </q-list>
+        <q-list> {% include "tagid/_api_docs.html" %} </q-list>
       </q-card-section>
     </q-card>
   </div>
@@ -517,5 +517,5 @@
 </div>
 
 {% endblock %} {% block scripts %} {{ window_vars(user) }}
-<script src="{{ static_url_for('boltcards/static', path='js/index.js') }}"></script>
+<script src="{{ static_url_for('tagid/static', path='js/index.js') }}"></script>
 {% endblock %}

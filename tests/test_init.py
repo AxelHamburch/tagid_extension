@@ -1,11 +1,11 @@
-import pytest
+﻿import pytest
 from fastapi import APIRouter
 
-from .. import boltcards_ext
+from .. import tagid_ext
 
 
 # just import router and add it to a test router
 @pytest.mark.asyncio
 async def test_router():
     router = APIRouter()
-    router.include_router(boltcards_ext)
+    router.include_router(tagid_ext)

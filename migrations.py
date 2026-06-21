@@ -1,7 +1,7 @@
-async def m001_initial(db):
+﻿async def m001_initial(db):
     await db.execute(
         """
-        CREATE TABLE boltcards.cards (
+        CREATE TABLE tagid.cards (
             id TEXT PRIMARY KEY UNIQUE,
             wallet TEXT NOT NULL,
             card_name TEXT NOT NULL,
@@ -27,7 +27,7 @@ async def m001_initial(db):
 
     await db.execute(
         f"""
-        CREATE TABLE boltcards.hits (
+        CREATE TABLE tagid.hits (
             id TEXT PRIMARY KEY UNIQUE,
             card_id TEXT NOT NULL,
             ip TEXT NOT NULL,
@@ -45,7 +45,7 @@ async def m001_initial(db):
 
     await db.execute(
         f"""
-        CREATE TABLE boltcards.refunds (
+        CREATE TABLE tagid.refunds (
             id TEXT PRIMARY KEY UNIQUE,
             hit_id TEXT NOT NULL,
             refund_amount {db.big_int} NOT NULL,
@@ -59,33 +59,33 @@ async def m001_initial(db):
 
 async def m003_add_pin_limit(db):
     await db.execute(
-        "ALTER TABLE boltcards.cards ADD COLUMN pin_limit INT DEFAULT NULL"
+        "ALTER TABLE tagid.cards ADD COLUMN pin_limit INT DEFAULT NULL"
     )
     await db.execute(
-        "ALTER TABLE boltcards.cards ADD COLUMN pin TEXT DEFAULT NULL"
+        "ALTER TABLE tagid.cards ADD COLUMN pin TEXT DEFAULT NULL"
     )
     await db.execute(
-        "ALTER TABLE boltcards.hits ADD COLUMN pin_attempts INT NOT NULL DEFAULT 0"
+        "ALTER TABLE tagid.hits ADD COLUMN pin_attempts INT NOT NULL DEFAULT 0"
     )
 
 
 async def m004_add_pin_blocked(db):
     await db.execute(
-        "ALTER TABLE boltcards.cards ADD COLUMN pin_blocked BOOL NOT NULL DEFAULT False"
+        "ALTER TABLE tagid.cards ADD COLUMN pin_blocked BOOL NOT NULL DEFAULT False"
     )
 
 
 async def m005_add_card_pin_attempts(db):
     await db.execute(
-        "ALTER TABLE boltcards.cards ADD COLUMN pin_total_attempts INT NOT NULL DEFAULT 0"
+        "ALTER TABLE tagid.cards ADD COLUMN pin_total_attempts INT NOT NULL DEFAULT 0"
     )
 
 
 async def m002_correct_typing(db):
-    await db.execute("ALTER TABLE boltcards.cards RENAME TO cards_m001;")
+    await db.execute("ALTER TABLE tagid.cards RENAME TO cards_m001;")
     await db.execute(
         """
-        CREATE TABLE boltcards.cards (
+        CREATE TABLE tagid.cards (
             id TEXT PRIMARY KEY UNIQUE,
             wallet TEXT NOT NULL,
             card_name TEXT NOT NULL,
@@ -111,7 +111,7 @@ async def m002_correct_typing(db):
 
     await db.execute(
         """
-        INSERT INTO boltcards.cards (
+        INSERT INTO tagid.cards (
             id,
             wallet,
             card_name,
@@ -148,7 +148,7 @@ async def m002_correct_typing(db):
             prev_k2,
             otp,
             time
-        FROM boltcards.cards_m001;
+        FROM tagid.cards_m001;
     """
     )
-    await db.execute("DROP TABLE boltcards.cards_m001;")
+    await db.execute("DROP TABLE tagid.cards_m001;")

@@ -1,4 +1,4 @@
-import json
+﻿import json
 import secrets
 from http import HTTPStatus
 from urllib.parse import urlparse
@@ -42,11 +42,11 @@ from .crud import (
 from .models import UIDPost
 from .nxp424 import decrypt_sun, get_sun_mac
 
-boltcards_lnurl_router = APIRouter()
+tagid_lnurl_router = APIRouter()
 
 
-# /boltcards/api/v1/scan?p=00000000000000000000000000000000&c=0000000000000000
-@boltcards_lnurl_router.get("/api/v1/scan/{external_id}")
+# /tagid/api/v1/scan?p=00000000000000000000000000000000&c=0000000000000000
+@tagid_lnurl_router.get("/api/v1/scan/{external_id}")
 async def api_scan(
     p, c, request: Request, external_id: str
 ) -> dict | LnurlErrorResponse:
@@ -96,11 +96,11 @@ async def api_scan(
     hit = await create_hit(card.id, ip, agent, card.counter, ctr_int)
 
     # create a lud17 lnurlp to support lud19, add payLink field of the withdrawRequest
-    lnurlpay_url = str(request.url_for("boltcards.lnurlp_response", hit_id=hit.id))
+    lnurlpay_url = str(request.url_for("tagid.lnurlp_response", hit_id=hit.id))
     pay_link = lnurlpay_url.replace("http://", "lnurlp://").replace(
         "https://", "lnurlp://"
     )
-    callback_url = str(request.url_for("boltcards.lnurl_callback", hit_id=hit.id))
+    callback_url = str(request.url_for("tagid.lnurl_callback", hit_id=hit.id))
     response: dict = {
         "tag": "withdrawRequest",
         "callback": callback_url,
@@ -115,10 +115,10 @@ async def api_scan(
     return response
 
 
-@boltcards_lnurl_router.get(
+@tagid_lnurl_router.get(
     "/api/v1/lnurl/cb/{hit_id}",
     status_code=HTTPStatus.OK,
-    name="boltcards.lnurl_callback",
+    name="tagid.lnurl_callback",
 )
 async def lnurl_callback(
     hit_id: str,
@@ -185,7 +185,7 @@ async def lnurl_callback(
             wallet_id=card.wallet,
             payment_request=pr,
             max_sat=int(card.tx_limit),
-            extra={"tag": "boltcards", "hit": hit.id},
+            extra={"tag": "tagid", "hit": hit.id},
         )
         return LnurlSuccessResponse()
     except Exception as exc:
@@ -196,8 +196,8 @@ async def lnurl_callback(
         return LnurlErrorResponse(reason=f"Payment failed - {exc}")
 
 
-# /boltcards/api/v1/auth?a=00000000000000000000000000000000
-@boltcards_lnurl_router.get("/api/v1/auth")
+# /tagid/api/v1/auth?a=00000000000000000000000000000000
+@tagid_lnurl_router.get("/api/v1/auth")
 async def api_auth(a, request: Request):
     if a == "00000000000000000000000000000000":
         response = {"k0": "0" * 32, "k1": "1" * 32, "k2": "2" * 32}
@@ -213,7 +213,7 @@ async def api_auth(a, request: Request):
     await update_card_otp(new_otp, card.id)
 
     lnurlw_base = (
-        f"{urlparse(str(request.url)).netloc}/boltcards/api/v1/scan/{card.external_id}"
+        f"{urlparse(str(request.url)).netloc}/tagid/api/v1/scan/{card.external_id}"
     )
 
     response = {
@@ -232,8 +232,8 @@ async def api_auth(a, request: Request):
     return response
 
 
-# /boltcards/api/v1/auth?a=00000000000000000000000000000000
-@boltcards_lnurl_router.post("/api/v1/auth")
+# /tagid/api/v1/auth?a=00000000000000000000000000000000
+@tagid_lnurl_router.post("/api/v1/auth")
 async def api_auth_post(a: str, request: Request, data: UIDPost, wipe: bool = False):
     card = None
     if wipe:
@@ -252,7 +252,7 @@ async def api_auth_post(a: str, request: Request, data: UIDPost, wipe: bool = Fa
     new_otp = secrets.token_hex(16)
     await update_card_otp(new_otp, card.id)
     lnurlw_base = (
-        f"{urlparse(str(request.url)).netloc}/boltcards/api/v1/scan/{card.external_id}"
+        f"{urlparse(str(request.url)).netloc}/tagid/api/v1/scan/{card.external_id}"
     )
     response = {
         "CARD_NAME": card.card_name,
@@ -273,9 +273,9 @@ async def api_auth_post(a: str, request: Request, data: UIDPost, wipe: bool = Fa
 
 
 ###############LNURLPAY REFUNDS#################
-@boltcards_lnurl_router.get(
+@tagid_lnurl_router.get(
     "/api/v1/lnurlp/cb/{hit_id}",
-    name="boltcards.lnurlp_callback",
+    name="tagid.lnurlp_callback",
 )
 async def lnurlp_callback(
     hit_id: str, amount: str = Query(None)
@@ -309,9 +309,9 @@ async def lnurlp_callback(
     return LnurlPayActionResponse(pr=invoice, successAction=action)
 
 
-@boltcards_lnurl_router.get(
+@tagid_lnurl_router.get(
     "/api/v1/lnurlp/{hit_id}",
-    name="boltcards.lnurlp_response",
+    name="tagid.lnurlp_response",
 )
 async def lnurlp_response(
     req: Request, hit_id: str
@@ -325,7 +325,7 @@ async def lnurlp_response(
     if not card.enable:
         return LnurlErrorResponse(reason="Card is disabled.")
     callback_url = parse_obj_as(
-        CallbackUrl, str(req.url_for("boltcards.lnurlp_callback", hit_id=hit_id))
+        CallbackUrl, str(req.url_for("tagid.lnurlp_callback", hit_id=hit_id))
     )
     return LnurlPayResponse(
         callback=callback_url,

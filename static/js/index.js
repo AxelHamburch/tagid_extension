@@ -1,4 +1,4 @@
-const mapCards = obj => {
+﻿const mapCards = obj => {
   obj.date = Quasar.date.formatDate(new Date(obj.time), 'YYYY-MM-DD HH:mm')
   return obj
 }
@@ -10,7 +10,7 @@ window.app = Vue.createApp({
     return {
       toggleAdvanced: false,
       disableNfcButton: true,
-      lnurlLink: `${window.location.host}/boltcards/api/v1/scan/`,
+      lnurlLink: `${window.location.host}/tagid/api/v1/scan/`,
       cards: [],
       hits: [],
       refunds: [],
@@ -194,7 +194,7 @@ window.app = Vue.createApp({
       LNbits.api
         .request(
           'GET',
-          '/boltcards/api/v1/cards?all_wallets=true',
+          '/tagid/api/v1/cards?all_wallets=true',
           this.g.user.wallets[0].inkey
         )
         .then(response => {
@@ -210,7 +210,7 @@ window.app = Vue.createApp({
       LNbits.api
         .request(
           'GET',
-          '/boltcards/api/v1/hits?all_wallets=true',
+          '/tagid/api/v1/hits?all_wallets=true',
           this.g.user.wallets[0].inkey
         )
         .then(response => {
@@ -224,7 +224,7 @@ window.app = Vue.createApp({
       LNbits.api
         .request(
           'GET',
-          '/boltcards/api/v1/refunds?all_wallets=true',
+          '/tagid/api/v1/refunds?all_wallets=true',
           this.g.user.wallets[0].inkey
         )
         .then(response => {
@@ -237,9 +237,9 @@ window.app = Vue.createApp({
       var card = _.findWhere(this.cards, {id: cardId})
       this.qrCodeDialog.data = {
         id: card.id,
-        link: window.location.origin + '/boltcards/api/v1/auth?a=' + card.otp,
+        link: window.location.origin + '/tagid/api/v1/auth?a=' + card.otp,
         encodedURI: encodeURIComponent(
-          window.location.origin + '/boltcards/api/v1/auth?a=' + card.otp
+          window.location.origin + '/tagid/api/v1/auth?a=' + card.otp
         ),
         name: card.card_name,
         uid: card.uid,
@@ -312,7 +312,7 @@ window.app = Vue.createApp({
     },
     createCard(wallet, data) {
       LNbits.api
-        .request('POST', '/boltcards/api/v1/cards', wallet.adminkey, data)
+        .request('POST', '/tagid/api/v1/cards', wallet.adminkey, data)
         .then(response => {
           this.cards.push(mapCards(response.data))
           this.cardDialog.show = false
@@ -345,7 +345,7 @@ window.app = Vue.createApp({
       LNbits.api
         .request(
           'PUT',
-          '/boltcards/api/v1/cards/' + data.id,
+          '/tagid/api/v1/cards/' + data.id,
           wallet.adminkey,
           data
         )
@@ -368,7 +368,7 @@ window.app = Vue.createApp({
       LNbits.api
         .request(
           'GET',
-          '/boltcards/api/v1/cards/enable/' + card_id + '/' + enable,
+          '/tagid/api/v1/cards/enable/' + card_id + '/' + enable,
           fullWallet.adminkey
         )
         .then(response => {
@@ -399,7 +399,7 @@ window.app = Vue.createApp({
           LNbits.api
             .request(
               'DELETE',
-              '/boltcards/api/v1/cards/' + cardId,
+              '/tagid/api/v1/cards/' + cardId,
               _.findWhere(this.g.user.wallets, {id: cards.wallet}).adminkey
             )
             .then(response => {

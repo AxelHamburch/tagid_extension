@@ -1,4 +1,35 @@
-# Bolt Cards - <small>[LNbits](https://github.com/lnbits/lnbits) extension</small>
+﻿# TagID Extension - <small>[LNbits](https://github.com/lnbits/lnbits) extension</small>
+
+> **Forked from [lnbits/boltcards](https://github.com/lnbits/boltcards)**  
+> Extended with PIN limit protection and failed-payment daily-limit fix.
+
+Self custody NFC Bolt Cards with one-time LNURLw links — now with optional PIN verification and accurate daily spend tracking.
+
+Check out [lnbits.com](https://lnbits.com) & join the Telegram support group [Makerbits](https://t.me/makerbits)
+
+`Original authors: dni, prusnak, talvasconcelos, arbadacarbaYK, gorrdy, arcbtc` / `TagID extension: AxelHamburch`
+
+Extension manifest source for LNbits: [https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/manifest.json](https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/manifest.json)
+
+---
+
+## Added Features
+
+### PIN Limit (optional per-card PIN protection)
+
+- Set a **PIN threshold (sat)**: any withdrawal at or above this amount requires the card holder to enter a 4-digit PIN.
+- The PIN is stored as a salted PBKDF2-SHA256 hash — never in plaintext.
+- After **3 wrong PIN attempts** across taps the card is automatically **disabled** and must be re-enabled by the wallet owner.
+- Attempt counter resets when the card is re-enabled or when a correct PIN is entered.
+
+### Failed-Payment Daily Limit Fix
+
+- Limit checks (tx limit & daily limit) now happen **before** the hit is marked as spent, so a rejected payment does not consume the daily budget.
+- When a payment fails after the invoice was accepted, the hit amount is zeroed so it does not count towards the daily limit.
+
+---
+
+
 
 <small>For more about LNBits extensions check [this tutorial](https://youtu.be/_sW7miqaXJc)</small>
 
@@ -74,14 +105,14 @@ The key #00, K0 (also know as auth key) is used as authentification key. It is n
 There's also a more [advanced guide](https://www.whitewolftech.com/articles/payment-card/) to set cards up manually with a card reader connected to your computer.
 Writing can also be done (without setting the keys) via the [TagWriter app by NXP](https://play.google.com/store/apps/details?id=com.nxp.nfc.tagwriter) on Android.
 
-The URI should be `lnurlw://YOUR_LNBITS_DOMAIN/boltcards/api/v1/scan/{YOUR_card_external_id}?p=00000000000000000000000000000000&c=0000000000000000`
+The URI should be `lnurlw://YOUR_LNBITS_DOMAIN/tagid/api/v1/scan/{YOUR_card_external_id}?p=00000000000000000000000000000000&c=0000000000000000`
 
 Then fill up the card parameters in the extension. Card Auth key (K0) can be filled in the extension just for the record. Initical counter can be 0.
 
 - If you don't know the card ID, use NXP TagInfo app to read it first.
 - Tap Write tags > New Data Set > Link
 - Set URI type to Custom URL
-- URL should look like `lnurlw://YOUR_LNBITS_DOMAIN/boltcards/api/v1/scan/{YOUR_card_external_id}?p=00000000000000000000000000000000&c=0000000000000000`
+- URL should look like `lnurlw://YOUR_LNBITS_DOMAIN/tagid/api/v1/scan/{YOUR_card_external_id}?p=00000000000000000000000000000000&c=0000000000000000`
 - click Configure mirroring options
 - Select Card Type NTAG 424 DNA
 - Check Enable SDM Mirroring
