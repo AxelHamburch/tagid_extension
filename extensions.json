@@ -1,3 +1,16 @@
 {
-  "extensions": []
+  "extensions": [
+    {
+      "id": "tagid",
+      "repo": "https://github.com/AxelHamburch/tagid_extension",
+      "name": "TagID",
+      "version": "2.0.0",
+      "min_lnbits_version": "1.5.4",
+      "short_description": "Self custody NFC Bolt Cards with PIN limit and daily limit fixes",
+      "icon": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/static/image/boltcard.png",
+      "details_link": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/config.json",
+      "archive": "https://github.com/AxelHamburch/tagid_extension/archive/refs/tags/v2.0.0.zip",
+      "hash": "006d5b022b3415e0f0f8876c870d592f2f90a91ee07d63b8203ade83ba937fc1"
+    }
+  ]
 }
