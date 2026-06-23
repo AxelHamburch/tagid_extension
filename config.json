@@ -1,6 +1,6 @@
 {
   "name": "TagID🔐",
-  "short_description": "NFC tag functionality with LNbits",
+  "short_description": "The World of NFC Tags",
   "tile": "/tagid/static/image/TagID.png",
   "version": "2.0.0",
   "min_lnbits_version": "1.5.4",
