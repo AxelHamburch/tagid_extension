@@ -1,7 +1,7 @@
 {
-  "name": "TagID",
-  "short_description": "Self custody NFC Bolt Cards with one time LNURLw — with PIN limit and daily limit fixes",
-  "tile": "/tagid/static/image/boltcard.png",
+  "name": "TagID🔐",
+  "short_description": "NFC tag functionality with LNbits—ranging from Bolt Cards and Bolt Rings to adhesive or clip-on tags.",
+  "tile": "/tagid/static/image/TagID.png",
   "version": "2.0.0",
   "min_lnbits_version": "1.5.4",
   "contributors": [

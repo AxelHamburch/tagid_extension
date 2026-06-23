@@ -1,4 +1,6 @@
-This extension enables you to link your Bolt Card to an NXP NTAG424 DNA tag via an LNbits hub. Each tap generates a new link, enhancing privacy and security compared to using a static LNURLw, which can also be written to an NFC tag (e.g., NTAG 213) in the withdraw-extension for purposes like one-time use gift cards.
+This extension allows you to link your Bolt Card to an NXP NTAG424 DNA tag via an LNbits hub. A new link is generated with every tap, enhancing privacy and security compared to using a static LNURLw (on NTAG 21x).
+
+TagID is a fork of the Bolt Cards extension that offers additional functionality, such as PIN verification above a certain amount threshold and the use of the tag ID for identification purposes.
 
 For a simpler setup, you will need:
 
