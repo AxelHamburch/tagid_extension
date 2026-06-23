@@ -6,11 +6,11 @@
       "name": "TagID🔐",
       "version": "2.0.0",
       "min_lnbits_version": "1.5.4",
-      "short_description": "NFC tag functionality with LNbits—ranging from Bolt Cards and Bolt Rings to adhesive or clip-on tags.",
+      "short_description": "The World of NFC Tags",
       "icon": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/static/image/TagID.png",
       "details_link": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/config.json",
       "archive": "https://github.com/AxelHamburch/tagid_extension/archive/refs/tags/v2.0.0.zip",
-      "hash": "d41335922af4fa1e87c3e089b903574d739ae1de80d9472f3de93ff1fe6199bb"
+      "hash": "4b3e30645b9c7697acaccad2d7526e2d68b3cbbdea415be66dee8de870168429"
     }
   ]
 }
