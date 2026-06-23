@@ -58,27 +58,33 @@
 
 
 async def m003_add_pin_limit(db):
-    await db.execute(
-        "ALTER TABLE tagid.cards ADD COLUMN pin_limit INT DEFAULT NULL"
-    )
-    await db.execute(
-        "ALTER TABLE tagid.cards ADD COLUMN pin TEXT DEFAULT NULL"
-    )
-    await db.execute(
-        "ALTER TABLE tagid.hits ADD COLUMN pin_attempts INT NOT NULL DEFAULT 0"
-    )
+    for stmt in [
+        "ALTER TABLE tagid.cards ADD COLUMN pin_limit INT DEFAULT NULL",
+        "ALTER TABLE tagid.cards ADD COLUMN pin TEXT DEFAULT NULL",
+        "ALTER TABLE tagid.hits ADD COLUMN pin_attempts INT NOT NULL DEFAULT 0",
+    ]:
+        try:
+            await db.execute(stmt)
+        except Exception:
+            pass
 
 
 async def m004_add_pin_blocked(db):
-    await db.execute(
-        "ALTER TABLE tagid.cards ADD COLUMN pin_blocked BOOL NOT NULL DEFAULT False"
-    )
+    try:
+        await db.execute(
+            "ALTER TABLE tagid.cards ADD COLUMN pin_blocked BOOL NOT NULL DEFAULT False"
+        )
+    except Exception:
+        pass
 
 
 async def m005_add_card_pin_attempts(db):
-    await db.execute(
-        "ALTER TABLE tagid.cards ADD COLUMN pin_total_attempts INT NOT NULL DEFAULT 0"
-    )
+    try:
+        await db.execute(
+            "ALTER TABLE tagid.cards ADD COLUMN pin_total_attempts INT NOT NULL DEFAULT 0"
+        )
+    except Exception:
+        pass
 
 
 async def m002_correct_typing(db):
