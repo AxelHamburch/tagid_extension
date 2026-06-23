@@ -1,6 +1,6 @@
 {
   "name": "TagID🔐",
-  "short_description": "NFC tag functionality with LNbits—ranging from Bolt Cards and Bolt Rings to adhesive or clip-on tags.",
+  "short_description": "NFC tag functionality with LNbits",
   "tile": "/tagid/static/image/TagID.png",
   "version": "2.0.0",
   "min_lnbits_version": "1.5.4",
@@ -58,12 +58,10 @@
   ],
   "images": [
     {
-      "uri": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/static/image/1.jpg",
-      "link": "https://www.youtube.com/embed/_sW7miqaXJc?si=UlFX7yU2A_LkC70r"
+      "uri": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/static/image/1.jpg"
     },
     {
-      "uri": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/static/image/2.jpg",
-      "link": "https://www.youtube.com/embed/wJ7QLFTRjK0?si=DRNH9ycKZrCLjFcx"
+      "uri": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/static/image/2.jpg"
     },
     {
       "uri": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/static/image/1.png"
