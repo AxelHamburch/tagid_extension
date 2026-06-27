@@ -11,6 +11,18 @@
       "details_link": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/config.json",
       "archive": "https://github.com/AxelHamburch/tagid_extension/archive/refs/tags/v2.0.0.zip",
       "hash": "4b3e30645b9c7697acaccad2d7526e2d68b3cbbdea415be66dee8de870168429"
+    },
+    {
+      "id": "tagid",
+      "repo": "https://github.com/AxelHamburch/tagid_extension",
+      "name": "TagID🔐",
+      "version": "2.1.0",
+      "min_lnbits_version": "1.5.4",
+      "short_description": "The World of NFC Tags – with Ring-Login verify endpoint",
+      "icon": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/static/image/TagID.png",
+      "details_link": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/config.json",
+      "archive": "https://github.com/AxelHamburch/tagid_extension/archive/refs/tags/v2.1.0.zip",
+      "hash": ""
     }
   ]
 }
