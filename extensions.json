@@ -18,7 +18,7 @@
       "name": "TagID🔐",
       "version": "2.1.0",
       "min_lnbits_version": "1.5.4",
-      "short_description": "The World of NFC Tags – with Ring-Login verify endpoint",
+      "short_description": "The World of NFC Tags",
       "icon": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/static/image/TagID.png",
       "details_link": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/config.json",
       "archive": "https://github.com/AxelHamburch/tagid_extension/archive/refs/tags/v2.1.0.zip",
