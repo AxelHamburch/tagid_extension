@@ -87,6 +87,12 @@ async def m005_add_card_pin_attempts(db):
         pass
 
 
+async def m006_zapbox_verify(db):
+    # No schema change — hits.spent=False for verify-only taps already works
+    # via m001. This marker bumps the migration sequence to match v2.1.0.
+    pass
+
+
 async def m002_correct_typing(db):
     await db.execute("ALTER TABLE tagid.cards RENAME TO cards_m001;")
     await db.execute(

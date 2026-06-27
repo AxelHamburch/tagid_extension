@@ -1,23 +1,30 @@
 ﻿from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from lnbits.core.crud import get_user
 from lnbits.core.models import WalletTypeInfo
 from lnbits.decorators import require_admin_key, require_invoice_key
 
 from .crud import (
     create_card,
+    create_hit,
     delete_card,
     enable_disable_card,
     get_card,
+    get_card_by_external_id,
     get_card_by_uid,
     get_cards,
     get_hits,
     get_refunds,
     hash_pin,
+    increment_card_pin_attempts,
+    reset_card_pin_attempts,
     update_card,
+    update_card_counter,
+    verify_pin,
 )
 from .models import Card, CreateCardData, Hit, Refund
+from .nxp424 import decrypt_sun, get_sun_mac
 
 tagid_api_router = APIRouter()
 
@@ -177,6 +184,74 @@ async def api_hits(
         cards_ids.append(card.id)
 
     return await get_hits(cards_ids)
+
+
+@tagid_api_router.get("/api/v1/scan/verify/{external_id}")
+async def api_scan_verify(
+    external_id: str,
+    p: str = Query(...),
+    c: str = Query(...),
+    pin: str | None = Query(None),
+    request: Request = None,
+    wallet: WalletTypeInfo = Depends(require_invoice_key),
+) -> dict:
+    p = p.upper()
+    c = c.upper()
+
+    card = await get_card_by_external_id(external_id)
+    if not card:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Card not found.")
+    if not card.enable:
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Card is disabled.")
+
+    try:
+        card_uid, counter = decrypt_sun(bytes.fromhex(p), bytes.fromhex(card.k1))
+        if card.uid.upper() != card_uid.hex().upper():
+            raise HTTPException(
+                status_code=HTTPStatus.FORBIDDEN, detail="Card UID mismatch."
+            )
+        if c != get_sun_mac(card_uid, counter, bytes.fromhex(card.k2)).hex().upper():
+            raise HTTPException(
+                status_code=HTTPStatus.FORBIDDEN, detail="CMAC does not check."
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Error decrypting card."
+        )
+
+    ctr_int = int.from_bytes(counter, "little")
+    if ctr_int <= card.counter:
+        raise HTTPException(
+            status_code=HTTPStatus.CONFLICT, detail="Link already used (replay)."
+        )
+
+    # Advance the counter now — prevents replay even if the PIN check below fails.
+    await update_card_counter(ctr_int, card.id)
+    ip = request.client.host if (request and request.client) else ""
+    if request:
+        ip = request.headers.get("x-real-ip") or request.headers.get("x-forwarded-for") or ip
+    agent = (request.headers.get("user-agent") or "") if request else ""
+    await create_hit(card.id, ip, agent, card.counter, ctr_int)
+
+    if pin and card.pin:
+        if not verify_pin(pin, card.id, card.pin):
+            total = await increment_card_pin_attempts(card.id)
+            if total >= 3:
+                await enable_disable_card(enable=False, card_id=card.id)
+                raise HTTPException(
+                    status_code=HTTPStatus.FORBIDDEN,
+                    detail="Card blocked: too many incorrect PIN attempts.",
+                )
+            remaining = max(0, 3 - total)
+            raise HTTPException(
+                status_code=HTTPStatus.FORBIDDEN,
+                detail=f"Invalid PIN. {remaining} attempt(s) remaining.",
+            )
+        await reset_card_pin_attempts(card.id)
+
+    return {"verified": True, "card_id": card.id, "external_id": card.external_id}
 
 
 @tagid_api_router.get("/api/v1/refunds")
