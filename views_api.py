@@ -92,14 +92,20 @@ async def api_card_update(
             detail="UID already registered. Delete registered card and try again.",
             status_code=HTTPStatus.BAD_REQUEST,
         )
+    original_pin = card.pin
+    original_pin_total_attempts = card.pin_total_attempts
     for key, value in data.dict().items():
         setattr(card, key, value)
     if data.pin:
         card.pin = hash_pin(data.pin, card.id)
         card.pin_total_attempts = 0
-    elif data.pin is None:
-        card.pin = None
-        card.pin_total_attempts = 0
+    else:
+        # The UI always blanks the PIN field before showing the edit dialog
+        # ("Leave empty to keep existing PIN"), so an empty value here must
+        # never overwrite the stored hash — otherwise every edit silently
+        # disables PIN verification and the next PIN entry is rejected as wrong.
+        card.pin = original_pin
+        card.pin_total_attempts = original_pin_total_attempts
     await update_card(card)
     return card
 
