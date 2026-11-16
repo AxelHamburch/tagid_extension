@@ -1,4 +1,4 @@
-﻿async def m001_initial(db):
+async def m001_initial(db):
     await db.execute(
         """
         CREATE TABLE tagid.cards (
@@ -55,42 +55,6 @@
         );
     """
     )
-
-
-async def m003_add_pin_limit(db):
-    for stmt in [
-        "ALTER TABLE tagid.cards ADD COLUMN pin_limit INT DEFAULT NULL",
-        "ALTER TABLE tagid.cards ADD COLUMN pin TEXT DEFAULT NULL",
-        "ALTER TABLE tagid.hits ADD COLUMN pin_attempts INT NOT NULL DEFAULT 0",
-    ]:
-        try:
-            await db.execute(stmt)
-        except Exception:
-            pass
-
-
-async def m004_add_pin_blocked(db):
-    try:
-        await db.execute(
-            "ALTER TABLE tagid.cards ADD COLUMN pin_blocked BOOL NOT NULL DEFAULT False"
-        )
-    except Exception:
-        pass
-
-
-async def m005_add_card_pin_attempts(db):
-    try:
-        await db.execute(
-            "ALTER TABLE tagid.cards ADD COLUMN pin_total_attempts INT NOT NULL DEFAULT 0"
-        )
-    except Exception:
-        pass
-
-
-async def m006_zapbox_verify(db):
-    # No schema change — hits.spent=False for verify-only taps already works
-    # via m001. This marker bumps the migration sequence to match v2.1.0.
-    pass
 
 
 async def m002_correct_typing(db):
@@ -164,3 +128,68 @@ async def m002_correct_typing(db):
     """
     )
     await db.execute("DROP TABLE tagid.cards_m001;")
+
+
+async def _columns(db, table: str) -> set[str]:
+    # Works on SQLite and Postgres, also for empty tables (column metadata only).
+    result = await db.execute(f"SELECT * FROM {table} LIMIT 1")
+    return set(result.keys())
+
+
+async def _add_column(db, table: str, column: str, ddl: str) -> None:
+    """Add a column only if it is missing.
+
+    Replaces the earlier try/except-pass pattern: on Postgres a failed ALTER
+    aborts the surrounding transaction, so every later statement would fail.
+    """
+    if column not in await _columns(db, table):
+        await db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
+
+
+async def m003_add_pin_limit(db):
+    await _add_column(db, "tagid.cards", "pin_limit", "INT DEFAULT NULL")
+    await _add_column(db, "tagid.cards", "pin", "TEXT DEFAULT NULL")
+    await _add_column(db, "tagid.hits", "pin_attempts", "INT NOT NULL DEFAULT 0")
+
+
+async def m004_add_pin_blocked(db):
+    # Column is no longer used (blocking disables the card), kept for history.
+    await _add_column(db, "tagid.cards", "pin_blocked", "BOOL NOT NULL DEFAULT FALSE")
+
+
+async def m005_add_card_pin_attempts(db):
+    await _add_column(db, "tagid.cards", "pin_total_attempts", "INT NOT NULL DEFAULT 0")
+
+
+async def m006_zapbox_verify(db):
+    # No schema change — marker that bumps the migration sequence to v2.1.0.
+    pass
+
+
+async def m007_claims(db):
+    """Per-claim accounting from boltcards v1.2.0 (m003_claims there), plus
+    a repair step for the PIN columns.
+
+    amount_msat / claimed_at drive the daily budget in SQL (UTC day),
+    max_msat is the withdrawable amount fixed when the hit was created
+    (0 for verify-only hits, so they can never be paid out).
+    """
+    # Before v2.2.0, m002 was defined after m003-m006 in this file and LNbits
+    # runs migrations in definition order: on a fresh install m002 rebuilt
+    # tagid.cards and dropped the PIN columns again. Re-add them if missing.
+    await m003_add_pin_limit(db)
+    await m005_add_card_pin_attempts(db)
+
+    await _add_column(
+        db, "tagid.hits", "amount_msat", f"{db.big_int} NOT NULL DEFAULT 0"
+    )
+    await _add_column(db, "tagid.hits", "max_msat", f"{db.big_int} NOT NULL DEFAULT 0")
+    await _add_column(db, "tagid.hits", "claimed_at", "TIMESTAMP")
+    await db.execute(
+        "UPDATE tagid.hits SET amount_msat = amount * 1000, claimed_at = time "
+        "WHERE spent = TRUE AND claimed_at IS NULL"
+    )
+    # Open (unspent) hits from before this version — verify-only taps and
+    # abandoned withdraw requests — get no withdraw budget (max_msat stays 0)
+    # and are closed. A fresh tap creates a new hit anyway.
+    await db.execute("UPDATE tagid.hits SET spent = TRUE WHERE spent = FALSE")

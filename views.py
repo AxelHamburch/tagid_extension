@@ -1,4 +1,4 @@
-﻿from http import HTTPStatus
+from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -8,6 +8,7 @@ from lnbits.decorators import check_user_exists, optional_user_id
 from lnbits.helpers import template_renderer
 
 from .crud import get_card_by_external_id, get_hits, get_refunds
+from .models import CardInfo
 
 tagid_generic_router = APIRouter()
 
@@ -19,7 +20,7 @@ def tagid_renderer():
 @tagid_generic_router.get("/", response_class=HTMLResponse)
 async def index(request: Request, user: User = Depends(check_user_exists)):
     return tagid_renderer().TemplateResponse(
-        "tagid/index.html", {"request": request, "user": user.json()}
+        "tagid/index.html", {"request": request, "user": user.model_dump_json()}
     )
 
 
@@ -39,16 +40,15 @@ async def display(
 
     wallet = await get_wallet(card.wallet)
     wallet_balance = 0
-    if wallet:
-        if wallet.user != user_id:
-            raise HTTPException(
-                status_code=HTTPStatus.FORBIDDEN, detail="Card does not belong to user."
-            )
-        wallet_balance = wallet.balance
+    if not wallet or wallet.user != user_id:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN, detail="Card does not belong to user."
+        )
+    wallet_balance = wallet.balance
     hits = await get_hits([card.id])
-    hits_json = [hit.json() for hit in hits]
+    hits_json = [hit.model_dump_json() for hit in hits]
     refunds = [refund.hit_id for refund in await get_refunds([hit.id for hit in hits])]
-    card_json = card.json(exclude={"wallet"})
+    card_json = CardInfo(**card.model_dump()).model_dump_json(exclude={"wallet"})
     return tagid_renderer().TemplateResponse(
         "tagid/display.html",
         {

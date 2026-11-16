@@ -40,9 +40,9 @@ def tagid_start():
 
 
 __all__ = [
+    "db",
     "tagid_ext",
     "tagid_start",
     "tagid_static_files",
     "tagid_stop",
-    "db",
 ]

@@ -1,23 +1,29 @@
-﻿import asyncio
+import asyncio
 
-from lnbits.core.crud import update_payment
+from lnbits.core.crud import get_wallet, update_payment
 from lnbits.core.models import Payment
+from lnbits.settings import settings
 from lnbits.tasks import register_invoice_listener
+from loguru import logger
 
-from .crud import create_refund, get_hit
+from .crud import create_refund, get_card, get_hit
 
 
 async def wait_for_paid_invoices():
     invoice_queue = asyncio.Queue()
     register_invoice_listener(invoice_queue, "ext_tagid")
 
-    while True:
+    while settings.lnbits_running:
         payment = await invoice_queue.get()
-        await on_invoice_paid(payment)
+        try:
+            await on_invoice_paid(payment)
+        except Exception as exc:
+            logger.error(
+                f"TagID: error handling paid invoice {payment.payment_hash}: {exc}"
+            )
 
 
 async def on_invoice_paid(payment: Payment) -> None:
-
     if not payment.extra or not payment.extra.get("refund"):
         return
 
@@ -27,7 +33,18 @@ async def on_invoice_paid(payment: Payment) -> None:
 
     hit = await get_hit(str(payment.extra.get("refund")))
 
-    if hit:
-        await create_refund(hit_id=hit.id, refund_amount=(payment.amount / 1000))
-        payment.extra["wh_status"] = 1
-        await update_payment(payment)
+    if not hit:
+        return
+    card = await get_card(hit.card_id)
+    if not card:
+        return
+    wallet = await get_wallet(card.wallet)
+    # Shared wallets record payments on their source wallet in newer LNbits versions.
+    if not wallet or payment.wallet_id != getattr(
+        wallet, "source_wallet_id", wallet.id
+    ):
+        return
+
+    await create_refund(hit_id=hit.id, refund_amount=(payment.amount / 1000))
+    payment.extra["wh_status"] = 1
+    await update_payment(payment)
