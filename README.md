@@ -9,7 +9,9 @@ Check out [lnbits.com](https://lnbits.com) & join the Telegram support group [Ma
 
 `Original authors: dni, prusnak, talvasconcelos, arbadacarbaYK, gorrdy, arcbtc` / `TagID extension: AxelHamburch`
 
-Extension manifest source for LNbits: [https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/manifest.json](https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/manifest.json)
+Extension manifest source for LNbits: [https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/extensions.json](https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/extensions.json)
+
+> **LNbits 1.7.x:** use `extensions.json` as manifest URL. The older `manifest.json` (GitHub-repo format) does not list any extension in LNbits 1.7.0/1.7.1, because core fails to parse the GitHub API answer (`stargazers_count` is declared as `str`, GitHub returns a number).
 
 ---
 
