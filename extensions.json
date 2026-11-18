@@ -62,6 +62,18 @@
       "details_link": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/config.json",
       "archive": "https://github.com/AxelHamburch/tagid_extension/archive/refs/tags/v2.2.1.zip",
       "hash": "85143c4b797ac5505c0b7199827b534deb8010b907115e699f2cbcd54b9bab48"
+    },
+    {
+      "id": "tagid",
+      "repo": "https://github.com/AxelHamburch/tagid_extension",
+      "name": "TagID🔐",
+      "version": "2.2.2",
+      "min_lnbits_version": "1.7.0",
+      "short_description": "The World of NFC Tags",
+      "icon": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/static/image/TagID.png",
+      "details_link": "https://raw.githubusercontent.com/AxelHamburch/tagid_extension/main/config.json",
+      "archive": "https://github.com/AxelHamburch/tagid_extension/archive/refs/tags/v2.2.2.zip",
+      "hash": "801ad4f072c1817457f110bef8342152f71db91bc2d457ebff21c861ef827e07"
     }
   ]
 }
