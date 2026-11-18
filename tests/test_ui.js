@@ -237,6 +237,19 @@ async function main() {
   await app.confirmWipe()
   assert.equal(confirmations.length, afterWipe)
 
+  // Re-opening the dialog after the wipe still shows the real keys, so the
+  // wipe data can be copied again (no new wipe request: the card is disabled).
+  await app.openQrCodeDialog('card', true)
+  assert.equal(app.qrCodeDialog.data.k0, card.k0)
+  const postsAfterReopen = requests.filter(([method]) => method === 'POST').length
+  const copiesBeforeReopen = copied.length
+  await app.prepareWipe()
+  assert.equal(JSON.parse(copied[copiesBeforeReopen]).k0, card.k0)
+  assert.equal(
+    requests.filter(([method]) => method === 'POST').length,
+    postsAfterReopen
+  )
+
   // Empty keys must never replace a good backup in the clipboard.
   storedCard = {...card, enable: false, k0: '', k1: '', k2: ''}
   await app.openQrCodeDialog('card', true)
