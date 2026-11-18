@@ -263,6 +263,32 @@ window.app = Vue.createApp({
         LNbits.utils.notifyApiError(error)
       }
     },
+    // Backup only: copies the keys the dialog already shows. It does NOT
+    // contact the server, so the card stays enabled and keeps its keys.
+    copyWipeBackup() {
+      const data = this.qrCodeDialog.data
+      this.copyText(
+        JSON.stringify({
+          action: 'wipe',
+          k0: data.k0,
+          k1: data.k1,
+          k2: data.k2,
+          k3: data.k3,
+          k4: data.k4,
+          uid: data.uid,
+          version: 1
+        })
+      )
+    },
+    confirmWipe() {
+      // Second click ("Copy wipe data"): the wipe already happened, just copy.
+      if (this.qrCodeDialog.wipePrepared) return this.prepareWipe()
+      LNbits.utils
+        .confirmDialog(
+          'Wipe this card now? It is disabled and its keys are removed from the server. To only back up the keys, use "Copy keys (backup)".'
+        )
+        .onOk(() => this.prepareWipe())
+    },
     async prepareWipe() {
       if (this.qrCodeDialog.wiping) return
       this.qrCodeDialog.wiping = true

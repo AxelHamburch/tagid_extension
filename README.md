@@ -36,6 +36,7 @@ Requires **LNbits 1.7.0** or newer. Based on the security hardening of upstream 
 - `GET /tagid/api/v1/cards`, `/hits` and `/refunds` require the wallet **admin key** (was: invoice key).
 - API responses no longer contain `pin`; use `has_pin`.
 - Programming via `POST /tagid/api/v1/auth` needs the OTP from the QR code, the UID alone is rejected. The Bolt Card Programmer app does this automatically.
+- **Wipe disables the card and removes its keys on the server** (like Bolt Cards 1.2.x). In the card dialog, **Wipe card now** (before: "Prepare wipe data") does this immediately. To only back up the keys, use **Copy keys (backup)**: it copies the keys and changes nothing. A wiped card must be re-provisioned (enter its keys again, enable it) before it works.
 - `GET /tagid/api/v1/scan/verify/{external_id}` returns an additional field `pin_verified`. A PIN sent for a card without PIN is ignored (no failed attempt).
 - Open withdraw requests from before the update are closed during migration. Simply tap the card again.
 

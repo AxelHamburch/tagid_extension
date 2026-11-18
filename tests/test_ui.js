@@ -9,6 +9,7 @@ const copied = []
 const errors = []
 const exportedFiles = []
 const confirmations = []
+let lastConfirmCallback
 const card = {
   id: 'card',
   enable: true,
@@ -70,7 +71,11 @@ vm.runInNewContext(fs.readFileSync('static/js/index.js', 'utf8'), {
       notifyApiError: error => errors.push(error),
       confirmDialog: message => {
         confirmations.push(message)
-        return {onOk: () => {}}
+        return {
+          onOk: callback => {
+            lastConfirmCallback = callback
+          }
+        }
       }
     }
   }
@@ -191,6 +196,44 @@ async function main() {
   app.generateKeys()
   assert.match(app.cardDialog.data.k1, /^[0-9a-f]{32}$/)
   assert.notEqual(app.cardDialog.data.k1, '2'.repeat(32))
+  // Backup without wiping: copies the keys, never contacts the server.
+  failWipe = false
+  failRefresh = false
+  loseWipeResponse = false
+  failRefreshAfterWipe = false
+  holdWipe = false
+  storedCard = {...card}
+  await app.openQrCodeDialog('card', true)
+  const postsBefore = requests.filter(([method]) => method === 'POST').length
+  const copiesBefore = copied.length
+  app.copyWipeBackup()
+  const backup = JSON.parse(copied[copiesBefore])
+  assert.equal(backup.action, 'wipe')
+  assert.equal(backup.k0, card.k0)
+  assert.equal(backup.k1, card.k1)
+  assert.equal(backup.k2, card.k2)
+  assert.equal(backup.uid, card.uid)
+  assert.equal(requests.filter(([method]) => method === 'POST').length, postsBefore)
+  assert.equal(app.qrCodeDialog.wipePrepared, false)
+  assert.equal(app.qrCodeDialog.data_wipe, null)
+  assert.equal(storedCard.enable, true)
+
+  // "Wipe card now" asks first and only wipes after the confirmation.
+  const confirmationsBefore = confirmations.length
+  app.confirmWipe()
+  assert.equal(confirmations.length, confirmationsBefore + 1)
+  assert.match(confirmations[confirmationsBefore], /Wipe this card now/)
+  assert.equal(requests.filter(([method]) => method === 'POST').length, postsBefore)
+  assert.equal(storedCard.enable, true)
+  await lastConfirmCallback()
+  assert.equal(requests.filter(([method]) => method === 'POST').length, postsBefore + 1)
+  assert.equal(app.qrCodeDialog.wipePrepared, true)
+  assert.equal(storedCard.enable, false)
+  // Second click only copies, without asking again.
+  const afterWipe = confirmations.length
+  await app.confirmWipe()
+  assert.equal(confirmations.length, afterWipe)
+
   console.log('Card UI checks passed')
 }
 main().catch(error => {

@@ -451,8 +451,9 @@
         />
       </div>
       <p v-if="qrCodeDialog.wipe">
-        Save the wipe data before closing. Wiping disables this card and removes
-        the server's copy of its keys.
+        <strong>Wipe card now</strong> disables this card and removes the
+        server's copy of its keys. To only back up the keys without changing the
+        card, use <strong>Copy keys (backup)</strong>.
       </p>
       <p style="word-break: break-all">
         <strong>Name: </strong><span v-text="qrCodeDialog.data.name"></span
@@ -486,12 +487,31 @@
         unelevated
         outline
         color="grey"
-        @click="prepareWipe"
+        @click="copyWipeBackup"
+        label="Copy keys (backup)"
+        v-show="qrCodeDialog.wipe && !qrCodeDialog.wipePrepared"
+      >
+        <q-tooltip
+          >Copies the card keys only. The card stays enabled and keeps its
+          keys.</q-tooltip
+        >
+      </q-btn>
+      <q-btn
+        class="q-ml-sm"
+        unelevated
+        outline
+        :color="qrCodeDialog.wipePrepared ? 'grey' : 'red'"
+        @click="confirmWipe"
         :loading="qrCodeDialog.wiping"
-        :label="qrCodeDialog.wipePrepared ? 'Copy wipe data' : 'Prepare wipe data'"
+        :label="qrCodeDialog.wipePrepared ? 'Copy wipe data' : 'Wipe card now'"
         v-show="qrCodeDialog.wipe"
       >
-        <q-tooltip>Click to copy, then paste to NFC Card Creator</q-tooltip>
+        <q-tooltip v-if="qrCodeDialog.wipePrepared"
+          >Click to copy, then paste to NFC Card Creator</q-tooltip
+        >
+        <q-tooltip v-else
+          >Disables the card and removes its keys from the server</q-tooltip
+        >
       </q-btn>
       <q-btn
         class="q-ml-sm"
