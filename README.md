@@ -20,6 +20,7 @@ Extension manifest source for LNbits: [https://raw.githubusercontent.com/AxelHam
 - **Fixed a data-loss trap.** In v2.2.0, **Prepare wipe data** in the card dialog already performed the wipe: the card was disabled and its keys were removed from the server. Opening the dialog again and copying the wipe data then put **empty keys** into the clipboard, so keys that were never saved elsewhere were gone.
 - The wipe now only **disables** the card. Keys and PIN stay stored until you delete the card. An accidental wipe is undone by enabling the card again.
 - New **Copy keys (backup)** button: copies the keys without changing anything. **Wipe card now** (was: "Prepare wipe data") is red and asks for confirmation. The copy buttons refuse to copy when no keys are stored, so a good backup in the clipboard is never overwritten.
+- The wipe dialog explains the order (backup, wipe, delete). A card **without stored keys** (for example wiped with v2.2.0) can be **deleted directly**; the useless buttons are hidden and the dialog says why.
 - Cards wiped with v2.2.0 have no keys on the server any more. If you still have the saved wipe data, edit the card, enter K0, K1 and K2 from it and enable the card. The chip itself was not changed by the wipe.
 
 ---

@@ -450,11 +450,31 @@
           ]"
         />
       </div>
-      <p v-if="qrCodeDialog.wipe">
-        <strong>Wipe card now</strong> disables this card. Its keys stay stored
-        until you delete the card. To only back up the keys without changing the
-        card, use <strong>Copy keys (backup)</strong>.
+      <p v-if="!hasKeys(qrCodeDialog.data)" class="text-negative">
+        <strong>No keys are stored for this card</strong>, for example because
+        it was wiped with TagID v2.2.0. There is nothing to back up or wipe, and
+        the card cannot be programmed. You can delete it
+        <span v-if="qrCodeDialog.wipe">(button below)</span>, or edit the card
+        and enter its keys again.
       </p>
+      <div v-else-if="qrCodeDialog.wipe">
+        <p class="q-mb-xs">Order when you want to remove a card:</p>
+        <ol class="q-mt-none">
+          <li>
+            <strong>Copy keys (backup)</strong>: optional, only copies, changes
+            nothing.
+          </li>
+          <li>
+            <strong>Wipe card now</strong>: disables the card and shows the
+            wipe data (QR / <strong>Copy wipe data</strong>) to reset the NFC
+            chip in the app. The keys stay stored.
+          </li>
+          <li>
+            <strong>Delete card</strong>: active after step 2, removes the card
+            and its keys for good.
+          </li>
+        </ol>
+      </div>
       <p style="word-break: break-all">
         <strong>Name: </strong><span v-text="qrCodeDialog.data.name"></span
         ><br />
@@ -479,7 +499,7 @@
         color="grey"
         @click="copyText(qrCodeDialog.data.link)"
         label="Create link"
-        v-show="!qrCodeDialog.wipe"
+        v-show="!qrCodeDialog.wipe && hasKeys(qrCodeDialog.data)"
       >
         <q-tooltip>Click to copy, then paste to NFC Card Creator</q-tooltip>
       </q-btn>
@@ -489,7 +509,11 @@
         color="grey"
         @click="copyWipeBackup"
         label="Copy keys (backup)"
-        v-show="qrCodeDialog.wipe && !qrCodeDialog.wipePrepared"
+        v-show="
+          qrCodeDialog.wipe &&
+          !qrCodeDialog.wipePrepared &&
+          hasKeys(qrCodeDialog.data)
+        "
       >
         <q-tooltip
           >Copies the card keys only. The card stays enabled and keeps its
@@ -504,7 +528,7 @@
         @click="confirmWipe"
         :loading="qrCodeDialog.wiping"
         :label="qrCodeDialog.wipePrepared ? 'Copy wipe data' : 'Wipe card now'"
-        v-show="qrCodeDialog.wipe"
+        v-show="qrCodeDialog.wipe && hasKeys(qrCodeDialog.data)"
       >
         <q-tooltip v-if="qrCodeDialog.wipePrepared"
           >Click to copy, then paste to NFC Card Creator</q-tooltip
@@ -519,7 +543,10 @@
         outline
         color="red"
         @click="deleteCard(qrCodeDialog.data.id)"
-        :disable="!qrCodeDialog.wipePrepared || qrCodeDialog.wiping"
+        :disable="
+          !(qrCodeDialog.wipePrepared || !hasKeys(qrCodeDialog.data)) ||
+          qrCodeDialog.wiping
+        "
         label="Delete card"
         v-show="qrCodeDialog.wipe"
         v-close-popup
@@ -532,7 +559,7 @@
         outline
         color="grey"
         :href="deeplinkUrl"
-        v-show="!qrCodeDialog.wipePrepared"
+        v-show="!qrCodeDialog.wipePrepared && hasKeys(qrCodeDialog.data)"
         target="_blank"
         label="Use Boltcard App"
       >
