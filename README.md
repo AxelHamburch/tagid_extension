@@ -21,6 +21,7 @@ Extension manifest source for LNbits: [https://raw.githubusercontent.com/AxelHam
 - The wipe now only **disables** the card. Keys and PIN stay stored until you delete the card. An accidental wipe is undone by enabling the card again.
 - New **Copy keys (backup)** button: copies the keys without changing anything. **Wipe card now** (was: "Prepare wipe data") is red and asks for confirmation. The copy buttons refuse to copy when no keys are stored, so a good backup in the clipboard is never overwritten.
 - The wipe dialog explains the order (backup, wipe, delete). A card **without stored keys** (for example wiped with v2.2.0) can be **deleted directly**; the useless buttons are hidden and the dialog says why.
+- **After updating or reinstalling the extension, restart the LNbits server and hard-reload the page** (`Ctrl+Shift+R`). LNbits adds the server start time to the file URLs, so without a restart the browser can keep using the old JavaScript with the new template (frozen page, `… is not a function` in the console).
 - Cards wiped with v2.2.0 have no keys on the server any more. If you still have the saved wipe data, edit the card, enter K0, K1 and K2 from it and enable the card. The chip itself was not changed by the wipe.
 
 ---
