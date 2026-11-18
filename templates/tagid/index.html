@@ -451,8 +451,8 @@
         />
       </div>
       <p v-if="qrCodeDialog.wipe">
-        <strong>Wipe card now</strong> disables this card and removes the
-        server's copy of its keys. To only back up the keys without changing the
+        <strong>Wipe card now</strong> disables this card. Its keys stay stored
+        until you delete the card. To only back up the keys without changing the
         card, use <strong>Copy keys (backup)</strong>.
       </p>
       <p style="word-break: break-all">
@@ -510,7 +510,7 @@
           >Click to copy, then paste to NFC Card Creator</q-tooltip
         >
         <q-tooltip v-else
-          >Disables the card and removes its keys from the server</q-tooltip
+          >Disables the card (keys stay stored until it is deleted)</q-tooltip
         >
       </q-btn>
       <q-btn

@@ -277,7 +277,7 @@ async def test_disabled_card_cannot_claim_pending_hit(client, owner, card, monke
 
 
 @pytest.mark.parametrize("method", ["get", "post"])
-async def test_wipe_clears_keys_and_invalidates_hits(client, owner, card, method):
+async def test_wipe_disables_card_but_keeps_keys(client, owner, card, method):
     hit = await scan(client, card, 1)
     kwargs = {"json": {"UID": card.uid}} if method == "post" else {}
     response = await getattr(client, method)(
@@ -287,17 +287,21 @@ async def test_wipe_clears_keys_and_invalidates_hits(client, owner, card, method
     assert card.k0 in response.text  # Physical wipe still needs the old key.
     wiped = await read_card(card.id)
     assert not wiped.enable
-    assert all(not getattr(wiped, key) for key in SECRETS - {"otp"})
+    # The keys must survive: they are the owner's only copy until the chip is reset.
+    for key in ("k0", "k1", "k2", "prev_k0", "prev_k1", "prev_k2"):
+        assert getattr(wiped, key) == getattr(card, key)
     assert wiped.otp != card.otp
     saved = await get_hit(hit["k1"])
     assert saved and saved.spent
     assert (await scan(client, card, 2))["status"] == "ERROR"
     assert (await claim(client, hit, 1_000)).json()["status"] == "ERROR"
+    # An accidental wipe is reversible: re-enable and the card works again.
     enabled = await client.get(
         f"/tagid/api/v1/cards/enable/{card.id}/true",
         headers={"X-API-KEY": owner[1].adminkey},
     )
-    assert enabled.status_code == 400
+    assert enabled.status_code == 200
+    assert (await scan(client, card, 3))["tag"] == "withdrawRequest"
 
 
 @pytest.mark.parametrize("status", ["failed", "pending", "unknown"])

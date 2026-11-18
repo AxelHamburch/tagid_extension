@@ -179,14 +179,14 @@ async def test_invalid_pin_format_rejected(client, owner):
     assert response.status_code == 400 or response.status_code == 422
 
 
-async def test_wipe_resets_pin_settings(client, pin_card):
+async def test_wipe_disables_card_and_keeps_pin_settings(client, pin_card):
     response = await client.get(
         "/tagid/api/v1/auth", params={"a": pin_card.otp, "wipe": "true"}
     )
     assert response.status_code == 200
     card = await read_card(pin_card.id)
-    assert card.pin is None and card.pin_limit is None
-    assert card.pin_total_attempts == 0
+    assert not card.enable
+    assert card.pin == pin_card.pin and card.pin_limit == pin_card.pin_limit
 
 
 # --------------------------------------------------------------------------- #

@@ -15,6 +15,15 @@ Extension manifest source for LNbits: [https://raw.githubusercontent.com/AxelHam
 
 ---
 
+## v2.2.1 – Wipe no longer deletes the card keys
+
+- **Fixed a data-loss trap.** In v2.2.0, **Prepare wipe data** in the card dialog already performed the wipe: the card was disabled and its keys were removed from the server. Opening the dialog again and copying the wipe data then put **empty keys** into the clipboard, so keys that were never saved elsewhere were gone.
+- The wipe now only **disables** the card. Keys and PIN stay stored until you delete the card. An accidental wipe is undone by enabling the card again.
+- New **Copy keys (backup)** button: copies the keys without changing anything. **Wipe card now** (was: "Prepare wipe data") is red and asks for confirmation. The copy buttons refuse to copy when no keys are stored, so a good backup in the clipboard is never overwritten.
+- Cards wiped with v2.2.0 have no keys on the server any more. If you still have the saved wipe data, edit the card, enter K0, K1 and K2 from it and enable the card. The chip itself was not changed by the wipe.
+
+---
+
 ## v2.2.0 – Security update for LNbits 1.7.0 (breaking)
 
 Requires **LNbits 1.7.0** or newer. Based on the security hardening of upstream boltcards v1.2.1, plus TagID-specific fixes.
@@ -29,14 +38,13 @@ Requires **LNbits 1.7.0** or newer. Based on the security hardening of upstream 
 - Refunds are only accepted for payments into the card's own wallet.
 - Rate limits on the programming endpoint (10/min per IP) and on the verify endpoint (10/min per card).
 - Verify-only taps (ZapBox Ring-Login) can never be paid out.
-- Wiping a card also removes its PIN and PIN limit.
 
 **Breaking changes**
 
 - `GET /tagid/api/v1/cards`, `/hits` and `/refunds` require the wallet **admin key** (was: invoice key).
 - API responses no longer contain `pin`; use `has_pin`.
 - Programming via `POST /tagid/api/v1/auth` needs the OTP from the QR code, the UID alone is rejected. The Bolt Card Programmer app does this automatically.
-- **Wipe disables the card and removes its keys on the server** (like Bolt Cards 1.2.x). In the card dialog, **Wipe card now** (before: "Prepare wipe data") does this immediately. To only back up the keys, use **Copy keys (backup)**: it copies the keys and changes nothing. A wiped card must be re-provisioned (enter its keys again, enable it) before it works.
+- In v2.2.0 the wipe in the card dialog also removed the card keys from the server. **This was changed in v2.2.1, see above.**
 - `GET /tagid/api/v1/scan/verify/{external_id}` returns an additional field `pin_verified`. A PIN sent for a card without PIN is ignored (no failed attempt).
 - Open withdraw requests from before the update are closed during migration. Simply tap the card again.
 

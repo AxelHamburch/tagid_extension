@@ -209,12 +209,12 @@ async def consume_card_otp(
             return None
         changes = "otp = :new_otp"
         if wipe:
-            # A wiped card is "new": keys and PIN settings are removed.
-            changes += (
-                ", enable = FALSE, k0 = '', k1 = '', k2 = '', "
-                "prev_k0 = '', prev_k1 = '', prev_k2 = '', "
-                "pin = NULL, pin_limit = NULL, pin_total_attempts = 0"
-            )
+            # The wipe only DISABLES the card (open taps are closed below). The keys
+            # stay stored: they are the owner's only copy until the NFC chip has
+            # really been reset, the wipe data is shown just once, and clearing
+            # them left a card whose chip still carried the old keys unrecoverable.
+            # They disappear with "Delete card". PIN settings stay as they are.
+            changes += ", enable = FALSE"
         result = await conn.conn.execute(
             text(f"UPDATE tagid.cards SET {changes} WHERE id = :id AND otp = :otp"),
             {"id": card.id, "otp": otp, "new_otp": secrets.token_hex(16)},

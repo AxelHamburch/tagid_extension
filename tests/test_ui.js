@@ -8,6 +8,7 @@ const requests = []
 const copied = []
 const errors = []
 const exportedFiles = []
+const notifications = []
 const confirmations = []
 let lastConfirmCallback
 const card = {
@@ -37,6 +38,7 @@ vm.runInNewContext(fs.readFileSync('static/js/index.js', 'utf8'), {
     }
   },
   Quasar: {
+    Notify: {create: options => notifications.push(options)},
     date: {formatDate: () => 'date'},
     exportFile: (...args) => exportedFiles.push(args)
   },
@@ -58,7 +60,8 @@ vm.runInNewContext(fs.readFileSync('static/js/index.js', 'utf8'), {
             finishWipe = resolve
           })
         if (args[0] === 'POST') {
-          storedCard = {...storedCard, enable: false, k0: '', k1: '', k2: ''}
+          // Server behavior: the wipe disables the card and keeps its keys.
+          storedCard = {...storedCard, enable: false}
           if (loseWipeResponse) throw new Error('response lost')
           if (failRefreshAfterWipe) failRefresh = true
         }
@@ -233,6 +236,20 @@ async function main() {
   const afterWipe = confirmations.length
   await app.confirmWipe()
   assert.equal(confirmations.length, afterWipe)
+
+  // Empty keys must never replace a good backup in the clipboard.
+  storedCard = {...card, enable: false, k0: '', k1: '', k2: ''}
+  await app.openQrCodeDialog('card', true)
+  const copiesNow = copied.length
+  const postsNow = requests.filter(([method]) => method === 'POST').length
+  const notificationsNow = notifications.length
+  app.copyWipeBackup()
+  await app.prepareWipe()
+  assert.equal(copied.length, copiesNow)
+  assert.equal(requests.filter(([method]) => method === 'POST').length, postsNow)
+  assert.equal(notifications.length, notificationsNow + 2)
+  assert.equal(app.qrCodeDialog.wiping, false)
+  assert.equal(app.qrCodeDialog.wipePrepared, false)
 
   console.log('Card UI checks passed')
 }
