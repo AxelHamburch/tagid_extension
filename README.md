@@ -15,6 +15,14 @@ Extension manifest source for LNbits: [https://raw.githubusercontent.com/AxelHam
 
 ---
 
+## v2.2.2 – The payer sees why a card payment failed
+
+- **Fixed a misleading message.** When the wallet behind a card could not pay (for example an empty funding wallet), the payer saw "Payment failed or is still pending." even though the payment had been **rejected**, and the real reason was not written anywhere.
+- The reason now goes to the **server log**, for example `TagID payment not completed: card=… hit=… status=failed: Insufficient balance.`
+- The payer sees LNbits' own short message, for example `Payment failed: Insufficient balance.` If LNbits gives no final status, the message is shown as it is (for example `Extension 'tagid' not enabled.`). Unexpected errors still show only a generic text; their details stay in the log.
+
+---
+
 ## v2.2.1 – Wipe no longer deletes the card keys
 
 - **Fixed a data-loss trap.** In v2.2.0, **Prepare wipe data** in the card dialog already performed the wipe: the card was disabled and its keys were removed from the server. Opening the dialog again and copying the wipe data then put **empty keys** into the clipboard, so keys that were never saved elsewhere were gone.

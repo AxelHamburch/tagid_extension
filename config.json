@@ -2,7 +2,7 @@
   "name": "TagID🔐",
   "short_description": "The World of NFC Tags",
   "tile": "/tagid/static/image/TagID.png",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "min_lnbits_version": "1.7.0",
   "contributors": [
     {
