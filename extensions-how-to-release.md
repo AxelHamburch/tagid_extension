@@ -250,9 +250,10 @@ Diese Tabelle nach jedem Release aktualisieren, damit beim nächsten Release der
 
 | Version | Tag-Commit | Commit-Message |
 |---------|-----------|----------------|
-| **v2.2.0** *(aktuell)* | `dfb9126` | `feat: v2.2.0 – port boltcards v1.2.1 security hardening, LNbits 1.7.0` |
-| v2.1.1 *(Basis für v2.2.0 Release Notes)* | `86b5d7d` | `release: prepare v2.1.1 (PIN edit fix) + add release guide` |
+| **v2.2.1** *(aktuell)* | `857e7bf` | `release: prepare v2.2.1 (wipe keeps the card keys)` |
+| v2.2.0 *(Basis für v2.2.1 Release Notes)* | `dfb9126` | `feat: v2.2.0 – port boltcards v1.2.1 security hardening, LNbits 1.7.0` |
+| v2.1.1 | `86b5d7d` | `release: prepare v2.1.1 (PIN edit fix) + add release guide` |
 | v2.1.0 | `2796a87` | `chore: restore short_description for v2.1.0 entry` |
 | v2.0.0 | `b81c204` | — |
 
-Für den nächsten Release: `git log dfb9126..HEAD --oneline`
+Für den nächsten Release: `git log 857e7bf..HEAD --oneline`
